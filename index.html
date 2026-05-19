@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aina Atlas — Hawaii Land Intelligence for iOS</title>
+  <meta name="description" content="Tap any parcel in Hawaii and instantly see ownership, zoning, valuation, permits, and flood depth. iOS app — TestFlight beta now open." />
+  <meta property="og:title" content="Aina Atlas — Hawaii Land Intelligence" />
+  <meta property="og:description" content="Tap any parcel in Hawaii and get the full picture. iOS app — TestFlight beta now open." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://ainaatlas.ikenagroup.com" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #111216;
+      --panel:   #1a1c22;
+      --border:  rgba(255,255,255,0.08);
+      --text:    #e8e6e1;
+      --muted:   rgba(232,230,225,0.55);
+      --orange:  #f26b1a;
+      --orange-lt: rgba(242,107,26,0.18);
+      --radius:  10px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* NAV */
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.25rem 2rem;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .wordmark {
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--text);
+    }
+
+    .wordmark span {
+      font-weight: 400;
+      color: var(--muted);
+    }
+
+    nav a {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--bg);
+      background: var(--orange);
+      text-decoration: none;
+      padding: 0.5rem 1.25rem;
+      border-radius: var(--radius);
+      transition: background 0.15s;
+    }
+
+    nav a:hover { background: #d95e15; }
+
+    /* HERO */
+    .hero {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 5rem 2rem 4rem;
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--orange);
+      background: var(--orange-lt);
+      border: 1px solid rgba(242,107,26,0.3);
+      border-radius: 20px;
+      padding: 0.3rem 0.9rem;
+      margin-bottom: 1.75rem;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 5vw, 3.25rem);
+      font-weight: 700;
+      line-height: 1.15;
+      color: var(--text);
+      margin-bottom: 1.25rem;
+      letter-spacing: -0.02em;
+    }
+
+    h1 em {
+      color: var(--orange);
+      font-style: normal;
+    }
+
+    .hero p {
+      font-size: 1.0625rem;
+      color: var(--muted);
+      max-width: 520px;
+      margin: 0 auto 2.5rem;
+    }
+
+    /* FORM */
+    .form-wrap {
+      display: flex;
+      gap: 0.75rem;
+      max-width: 420px;
+      margin: 0 auto;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .form-wrap input[type="email"] {
+      flex: 1;
+      min-width: 210px;
+      padding: 0.8rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.9375rem;
+      font-family: inherit;
+      background: var(--panel);
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .form-wrap input[type="email"]::placeholder { color: var(--muted); }
+    .form-wrap input[type="email"]:focus { border-color: var(--orange); }
+
+    .form-wrap button {
+      padding: 0.8rem 1.5rem;
+      background: var(--orange);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 0.9375rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+
+    .form-wrap button:hover { background: #d95e15; }
+
+    .form-note {
+      font-size: 0.8125rem;
+      color: var(--muted);
+      margin-top: 0.875rem;
+    }
+
+    .success-msg {
+      display: none;
+      color: var(--orange);
+      font-weight: 500;
+      margin-top: 1rem;
+      font-size: 0.9375rem;
+    }
+
+    /* WEB LINK */
+    .web-link-bar {
+      text-align: center;
+      padding: 1.25rem 2rem 0;
+    }
+
+    .web-link-bar a {
+      font-size: 0.875rem;
+      color: var(--muted);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(232,230,225,0.2);
+      transition: color 0.15s;
+    }
+
+    .web-link-bar a span {
+      color: var(--orange);
+    }
+
+    .web-link-bar a:hover { color: var(--text); }
+
+    /* DIVIDER */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 4rem auto 0;
+      max-width: 900px;
+    }
+
+    /* FEATURES */
+    .features {
+      padding: 4rem 2rem;
+    }
+
+    .features-inner {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .feature {
+      padding: 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--panel);
+    }
+
+    .feature-title {
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: var(--orange);
+      margin-bottom: 0.5rem;
+    }
+
+    .feature p {
+      font-size: 0.875rem;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    /* COVERAGE */
+    .coverage {
+      padding: 3rem 2rem 4rem;
+      max-width: 720px;
+      margin: 0 auto;
+      text-align: center;
+      border-top: 1px solid var(--border);
+    }
+
+    .coverage h2 {
+      font-size: 1.375rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+    }
+
+    .coverage p {
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+      font-size: 0.9375rem;
+    }
+
+    .islands {
+      display: flex;
+      justify-content: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .island-pill {
+      font-size: 0.875rem;
+      font-weight: 500;
+      padding: 0.35rem 1rem;
+      border-radius: 20px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    /* WHO */
+    .who {
+      background: var(--panel);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 4rem 2rem;
+    }
+
+    .who-inner {
+      max-width: 720px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .who h2 {
+      font-size: 1.375rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+    }
+
+    .who p {
+      color: var(--muted);
+      margin-bottom: 2rem;
+      font-size: 0.9375rem;
+    }
+
+    .who-list {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.75rem;
+    }
+
+    .who-tag {
+      font-size: 0.875rem;
+      padding: 0.35rem 1rem;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    /* CTA BOTTOM */
+    .cta-bottom {
+      padding: 5rem 2rem;
+      text-align: center;
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
+    .cta-bottom h2 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.75rem;
+      letter-spacing: -0.01em;
+    }
+
+    .cta-bottom p {
+      color: var(--muted);
+      margin-bottom: 2rem;
+      font-size: 0.9375rem;
+    }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 1.5rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8125rem;
+      color: var(--muted);
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      background: var(--panel);
+    }
+
+    footer a {
+      color: var(--muted);
+      text-decoration: none;
+    }
+
+    footer a:hover { color: var(--text); }
+
+    @media (max-width: 500px) {
+      nav { padding: 1rem 1.25rem; }
+      .hero { padding: 3.5rem 1.25rem 3rem; }
+      footer { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="wordmark">Aina Atlas <span>by Ikena</span></div>
+  <a href="#beta">Join Beta</a>
+</nav>
+
+<section class="hero">
+  <div class="badge">iOS App — TestFlight Beta Now Open</div>
+  <h1>Know the land<br>before you move on <em>it.</em></h1>
+  <p>Aina Atlas is an iPhone app. Tap any parcel in Hawaii and get the full picture — ownership, zoning, valuation, nearby permits, and flood depth — in seconds.</p>
+  <form class="form-wrap" id="beta-form">
+    <input type="email" placeholder="your@email.com" required id="email-input" />
+    <button type="submit">Request Access</button>
+  </form>
+  <p class="form-note">iOS only · TestFlight invite within 24 hours</p>
+  <p class="success-msg" id="success-msg">You're on the list. Check your inbox for a TestFlight invite.</p>
+</section>
+
+<div class="web-link-bar">
+  <a href="https://ai.ikenagroup.com/atlas/" target="_blank">
+    Already have access? <span>Open the web map &rarr;</span>
+  </a>
+</div>
+
+<hr class="divider" />
+
+<section class="features">
+  <div class="features-inner">
+    <p class="section-label">What it does</p>
+    <div class="feature-grid">
+      <div class="feature">
+        <div class="feature-title">Parcel lookup</div>
+        <p>Owner, TMK, acreage, zoning, and last recorded sale — pulled from county records statewide.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-title">Valuation heatmap</div>
+        <p>See assessed value per sqft across a neighborhood at a glance. Spot outliers before anyone else does.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-title">Live permit feed</div>
+        <p>County building permits filed nearby. Know what's being built or demolished before it shows up anywhere else.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-title">FEMA flood depth</div>
+        <p>Base Flood Elevation at the exact parcel you're standing on, not just the zone boundary.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-title">GPX / KML export</div>
+        <p>Push parcel boundaries to Avenza, Gaia GPS, or any GIS app that reads standard field formats.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-title">Ahupuaa overlays</div>
+        <p>Traditional Hawaiian land divisions — ahupuaʻa and moku — layered over every parcel on the map.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="coverage">
+  <h2>Statewide coverage</h2>
+  <p>All four counties. One app.</p>
+  <div class="islands">
+    <span class="island-pill">Oahu</span>
+    <span class="island-pill">Maui</span>
+    <span class="island-pill">Hawaii Island</span>
+    <span class="island-pill">Kauai</span>
+  </div>
+</section>
+
+<section class="who">
+  <div class="who-inner">
+    <h2>Built for people who read land for a living</h2>
+    <p>Or just can't stop thinking about it.</p>
+    <div class="who-list">
+      <span class="who-tag">Real estate agents</span>
+      <span class="who-tag">Contractors</span>
+      <span class="who-tag">Surveyors</span>
+      <span class="who-tag">Land investors</span>
+      <span class="who-tag">Planners</span>
+      <span class="who-tag">Architects</span>
+      <span class="who-tag">Property managers</span>
+      <span class="who-tag">Anyone who loves a good parcel map</span>
+    </div>
+  </div>
+</section>
+
+<section class="cta-bottom" id="beta">
+  <h2>Get early access</h2>
+  <p>Beta is open now via TestFlight. Drop your email and we'll send an invite within 24 hours.</p>
+  <form class="form-wrap" id="beta-form-2">
+    <input type="email" placeholder="your@email.com" required id="email-input-2" />
+    <button type="submit">Request Access</button>
+  </form>
+  <p class="form-note">iOS only · No spam · Unsubscribe any time</p>
+  <p class="success-msg" id="success-msg-2">You're on the list. Check your inbox for a TestFlight invite.</p>
+</section>
+
+<footer>
+  <span>Aina Atlas — a product of Ikena Design & Build</span>
+  <span>
+    <a href="mailto:fjordsadventures@gmail.com">Contact</a>
+    &nbsp;&middot;&nbsp;
+    <a href="https://ai.ikenagroup.com/privacy.html" target="_blank">Privacy</a>
+    &nbsp;&middot;&nbsp;
+    <a href="https://ai.ikenagroup.com/terms.html" target="_blank">Terms</a>
+  </span>
+</footer>
+
+<script>
+  function handleSubmit(formId, inputId, msgId) {
+    const form = document.getElementById(formId);
+    const input = document.getElementById(inputId);
+    const msg = document.getElementById(msgId);
+
+    form.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const email = input.value.trim();
+      if (!email) return;
+
+      const btn = form.querySelector('button');
+      btn.textContent = 'Sending...';
+      btn.disabled = true;
+
+      try {
+        await fetch('https://ai.portofcams.com/api/bluewave/waitlist', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, product: 'aina-atlas', source: 'landing' })
+        });
+      } catch (_) {}
+
+      input.style.display = 'none';
+      btn.style.display = 'none';
+      msg.style.display = 'block';
+    });
+  }
+
+  handleSubmit('beta-form', 'email-input', 'success-msg');
+  handleSubmit('beta-form-2', 'email-input-2', 'success-msg-2');
+</script>
+
+</body>
+</html>
