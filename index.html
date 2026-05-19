@@ -9,18 +9,20 @@
   <meta property="og:description" content="Tap any parcel in Hawaii and get the full picture. iOS app — TestFlight beta now open." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://ainaatlas.ikenagroup.com" />
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:      #111216;
-      --panel:   #1a1c22;
-      --border:  rgba(255,255,255,0.08);
-      --text:    #e8e6e1;
-      --muted:   rgba(232,230,225,0.55);
-      --orange:  #f26b1a;
+      --bg:        #111216;
+      --panel:     #1a1c22;
+      --border:    rgba(255,255,255,0.08);
+      --text:      #e8e6e1;
+      --muted:     rgba(232,230,225,0.55);
+      --orange:    #f26b1a;
       --orange-lt: rgba(242,107,26,0.18);
-      --radius:  10px;
+      --radius:    10px;
     }
 
     html { scroll-behavior: smooth; }
@@ -34,15 +36,17 @@
 
     /* NAV */
     nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 1.25rem 2rem;
-      background: var(--panel);
+      padding: 1.125rem 2rem;
+      background: rgba(17,18,22,0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
-      position: sticky;
-      top: 0;
-      z-index: 10;
     }
 
     .wordmark {
@@ -52,15 +56,12 @@
       color: var(--text);
     }
 
-    .wordmark span {
-      font-weight: 400;
-      color: var(--muted);
-    }
+    .wordmark span { font-weight: 400; color: var(--muted); }
 
     nav a {
       font-size: 0.875rem;
       font-weight: 600;
-      color: var(--bg);
+      color: #fff;
       background: var(--orange);
       text-decoration: none;
       padding: 0.5rem 1.25rem;
@@ -72,10 +73,40 @@
 
     /* HERO */
     .hero {
-      max-width: 720px;
-      margin: 0 auto;
-      padding: 5rem 2rem 4rem;
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    #hero-map {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+
+    /* dark gradient overlay so text is readable */
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background: linear-gradient(
+        to bottom,
+        rgba(17,18,22,0.72) 0%,
+        rgba(17,18,22,0.55) 40%,
+        rgba(17,18,22,0.80) 100%
+      );
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
       text-align: center;
+      padding: 6rem 2rem 4rem;
+      max-width: 720px;
+      width: 100%;
     }
 
     .badge {
@@ -86,31 +117,30 @@
       text-transform: uppercase;
       color: var(--orange);
       background: var(--orange-lt);
-      border: 1px solid rgba(242,107,26,0.3);
+      border: 1px solid rgba(242,107,26,0.35);
       border-radius: 20px;
       padding: 0.3rem 0.9rem;
       margin-bottom: 1.75rem;
     }
 
     h1 {
-      font-size: clamp(2rem, 5vw, 3.25rem);
+      font-size: clamp(2.25rem, 5.5vw, 3.5rem);
       font-weight: 700;
-      line-height: 1.15;
+      line-height: 1.12;
       color: var(--text);
       margin-bottom: 1.25rem;
-      letter-spacing: -0.02em;
+      letter-spacing: -0.025em;
+      text-shadow: 0 2px 20px rgba(0,0,0,0.5);
     }
 
-    h1 em {
-      color: var(--orange);
-      font-style: normal;
-    }
+    h1 em { color: var(--orange); font-style: normal; }
 
-    .hero p {
+    .hero-content > p {
       font-size: 1.0625rem;
-      color: var(--muted);
-      max-width: 520px;
+      color: rgba(232,230,225,0.8);
+      max-width: 500px;
       margin: 0 auto 2.5rem;
+      text-shadow: 0 1px 8px rgba(0,0,0,0.6);
     }
 
     /* FORM */
@@ -127,14 +157,15 @@
       flex: 1;
       min-width: 210px;
       padding: 0.8rem 1rem;
-      border: 1px solid var(--border);
+      border: 1px solid rgba(255,255,255,0.15);
       border-radius: var(--radius);
       font-size: 0.9375rem;
       font-family: inherit;
-      background: var(--panel);
+      background: rgba(26,28,34,0.85);
       color: var(--text);
       outline: none;
       transition: border-color 0.15s;
+      backdrop-filter: blur(8px);
     }
 
     .form-wrap input[type="email"]::placeholder { color: var(--muted); }
@@ -158,7 +189,7 @@
 
     .form-note {
       font-size: 0.8125rem;
-      color: var(--muted);
+      color: rgba(232,230,225,0.5);
       margin-top: 0.875rem;
     }
 
@@ -172,35 +203,24 @@
 
     /* WEB LINK */
     .web-link-bar {
-      text-align: center;
-      padding: 1.25rem 2rem 0;
+      margin-top: 1.75rem;
     }
 
     .web-link-bar a {
       font-size: 0.875rem;
-      color: var(--muted);
+      color: rgba(232,230,225,0.55);
       text-decoration: none;
       border-bottom: 1px solid rgba(232,230,225,0.2);
       transition: color 0.15s;
     }
 
-    .web-link-bar a span {
-      color: var(--orange);
-    }
-
+    .web-link-bar a span { color: var(--orange); }
     .web-link-bar a:hover { color: var(--text); }
-
-    /* DIVIDER */
-    .divider {
-      border: none;
-      border-top: 1px solid var(--border);
-      margin: 4rem auto 0;
-      max-width: 900px;
-    }
 
     /* FEATURES */
     .features {
-      padding: 4rem 2rem;
+      padding: 5rem 2rem;
+      background: var(--bg);
     }
 
     .features-inner {
@@ -246,32 +266,17 @@
 
     /* COVERAGE */
     .coverage {
-      padding: 3rem 2rem 4rem;
+      padding: 3.5rem 2rem 4rem;
       max-width: 720px;
       margin: 0 auto;
       text-align: center;
       border-top: 1px solid var(--border);
     }
 
-    .coverage h2 {
-      font-size: 1.375rem;
-      font-weight: 600;
-      color: var(--text);
-      margin-bottom: 0.5rem;
-    }
+    .coverage h2 { font-size: 1.375rem; font-weight: 600; color: var(--text); margin-bottom: 0.5rem; }
+    .coverage p { color: var(--muted); margin-bottom: 1.5rem; font-size: 0.9375rem; }
 
-    .coverage p {
-      color: var(--muted);
-      margin-bottom: 1.5rem;
-      font-size: 0.9375rem;
-    }
-
-    .islands {
-      display: flex;
-      justify-content: center;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-    }
+    .islands { display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap; }
 
     .island-pill {
       font-size: 0.875rem;
@@ -291,31 +296,11 @@
       padding: 4rem 2rem;
     }
 
-    .who-inner {
-      max-width: 720px;
-      margin: 0 auto;
-      text-align: center;
-    }
+    .who-inner { max-width: 720px; margin: 0 auto; text-align: center; }
+    .who h2 { font-size: 1.375rem; font-weight: 600; color: var(--text); margin-bottom: 0.5rem; }
+    .who p { color: var(--muted); margin-bottom: 2rem; font-size: 0.9375rem; }
 
-    .who h2 {
-      font-size: 1.375rem;
-      font-weight: 600;
-      color: var(--text);
-      margin-bottom: 0.5rem;
-    }
-
-    .who p {
-      color: var(--muted);
-      margin-bottom: 2rem;
-      font-size: 0.9375rem;
-    }
-
-    .who-list {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 0.75rem;
-    }
+    .who-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.75rem; }
 
     .who-tag {
       font-size: 0.875rem;
@@ -333,19 +318,8 @@
       margin: 0 auto;
     }
 
-    .cta-bottom h2 {
-      font-size: 1.75rem;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 0.75rem;
-      letter-spacing: -0.01em;
-    }
-
-    .cta-bottom p {
-      color: var(--muted);
-      margin-bottom: 2rem;
-      font-size: 0.9375rem;
-    }
+    .cta-bottom h2 { font-size: 1.75rem; font-weight: 700; color: var(--text); margin-bottom: 0.75rem; letter-spacing: -0.01em; }
+    .cta-bottom p { color: var(--muted); margin-bottom: 2rem; font-size: 0.9375rem; }
 
     /* FOOTER */
     footer {
@@ -361,16 +335,16 @@
       background: var(--panel);
     }
 
-    footer a {
-      color: var(--muted);
-      text-decoration: none;
-    }
-
+    footer a { color: var(--muted); text-decoration: none; }
     footer a:hover { color: var(--text); }
+
+    /* hide maplibre controls on hero map */
+    #hero-map .maplibregl-control-container { display: none; }
+    #hero-map .maplibregl-canvas { cursor: default !important; }
 
     @media (max-width: 500px) {
       nav { padding: 1rem 1.25rem; }
-      .hero { padding: 3.5rem 1.25rem 3rem; }
+      .hero-content { padding: 5rem 1.25rem 3rem; }
       footer { flex-direction: column; align-items: flex-start; }
     }
   </style>
@@ -383,24 +357,25 @@
 </nav>
 
 <section class="hero">
-  <div class="badge">iOS App — TestFlight Beta Now Open</div>
-  <h1>Know the land<br>before you move on <em>it.</em></h1>
-  <p>Aina Atlas is an iPhone app. Tap any parcel in Hawaii and get the full picture — ownership, zoning, valuation, nearby permits, and flood depth — in seconds.</p>
-  <form class="form-wrap" id="beta-form">
-    <input type="email" placeholder="your@email.com" required id="email-input" />
-    <button type="submit">Request Access</button>
-  </form>
-  <p class="form-note">iOS only · TestFlight invite within 24 hours</p>
-  <p class="success-msg" id="success-msg">You're on the list. Check your inbox for a TestFlight invite.</p>
+  <div id="hero-map"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <div class="badge">iOS App — TestFlight Beta Now Open</div>
+    <h1>Know the land<br>before you move on <em>it.</em></h1>
+    <p>Aina Atlas is an iPhone app. Tap any parcel in Hawaii and get the full picture — ownership, zoning, valuation, nearby permits, and flood depth — in seconds.</p>
+    <form class="form-wrap" id="beta-form">
+      <input type="email" placeholder="your@email.com" required id="email-input" />
+      <button type="submit">Request Access</button>
+    </form>
+    <p class="form-note">iOS only · TestFlight invite within 24 hours</p>
+    <p class="success-msg" id="success-msg">You're on the list. Check your inbox for a TestFlight invite.</p>
+    <div class="web-link-bar">
+      <a href="https://ai.ikenagroup.com/3d" target="_blank">
+        Already have access? <span>Open the web map &rarr;</span>
+      </a>
+    </div>
+  </div>
 </section>
-
-<div class="web-link-bar">
-  <a href="https://ai.ikenagroup.com/atlas/" target="_blank">
-    Already have access? <span>Open the web map &rarr;</span>
-  </a>
-</div>
-
-<hr class="divider" />
 
 <section class="features">
   <div class="features-inner">
@@ -428,7 +403,7 @@
       </div>
       <div class="feature">
         <div class="feature-title">Ahupuaa overlays</div>
-        <p>Traditional Hawaiian land divisions — ahupuaʻa and moku — layered over every parcel on the map.</p>
+        <p>Traditional Hawaiian land divisions layered over every parcel. Ahupuaa and moku, statewide.</p>
       </div>
     </div>
   </div>
@@ -485,6 +460,68 @@
 </footer>
 
 <script>
+  // ── Hero map background ─────────────────────────────────────────────────────
+  const heroMap = new maplibregl.Map({
+    container: 'hero-map',
+    style: {
+      version: 8,
+      glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
+      sources: {
+        osm: {
+          type: 'raster',
+          tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+          tileSize: 256,
+        },
+      },
+      layers: [{ id: 'osm', type: 'raster', source: 'osm', paint: { 'raster-brightness-min': 0, 'raster-brightness-max': 0.35, 'raster-saturation': -0.4 } }],
+    },
+    center: [-157.3, 20.7],
+    zoom: 7,
+    pitch: 30,
+    bearing: -8,
+    interactive: false,
+    attributionControl: false,
+  });
+
+  // Slow drift across the islands
+  let bearing = -8;
+  function drift() {
+    bearing -= 0.012;
+    heroMap.easeTo({ bearing, duration: 100, easing: t => t });
+    requestAnimationFrame(drift);
+  }
+  heroMap.on('load', () => {
+    drift();
+
+    // Orange parcel-style glow layer using a simple polygon over Oahu
+    heroMap.addSource('oahu-highlight', {
+      type: 'geojson',
+      data: {
+        type: 'Feature',
+        geometry: {
+          type: 'Polygon',
+          coordinates: [[
+            [-158.28, 21.57], [-157.63, 21.71], [-157.63, 21.27],
+            [-157.98, 21.25], [-158.28, 21.57]
+          ]]
+        }
+      }
+    });
+    heroMap.addLayer({
+      id: 'oahu-glow',
+      type: 'fill',
+      source: 'oahu-highlight',
+      paint: { 'fill-color': '#f26b1a', 'fill-opacity': 0.08 }
+    });
+    heroMap.addLayer({
+      id: 'oahu-line',
+      type: 'line',
+      source: 'oahu-highlight',
+      paint: { 'line-color': '#f26b1a', 'line-width': 1, 'line-opacity': 0.3 }
+    });
+  });
+
+  // ── Beta form ───────────────────────────────────────────────────────────────
   function handleSubmit(formId, inputId, msgId) {
     const form = document.getElementById(formId);
     const input = document.getElementById(inputId);
